@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swagger-ui-config
+  namespace: swagger-ui
+data:
+  swagger-initializer.js: |
+    window.onload = function() {
+      window.ui = SwaggerUIBundle({
+        urls: [
+          { url: "https://api.example.com/prod/swagger.json", name: "Production" },
+          { url: "https://api.example.com/staging/swagger.json", name: "Staging" }
+        ],
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
