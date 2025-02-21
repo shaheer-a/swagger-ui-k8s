@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: swagger-ui
+  namespace: swagger-ui
+spec:
+  serviceName: swagger-ui-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swagger-ui
+  template:
+    metadata:
+      labels:
+        app: swagger-ui
+    spec:
+      volumes:
+        - name: swagger-ui-config
+          configMap:
+            name: swagger-ui-config
+        - name: swagger-ui-storage
+          persistentVolumeClaim:
+            claimName: swagger-ui-pvc
+      initContainers:
+        - name: swagger-init
+          image: swaggerapi/swagger-ui:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - cp -r /usr/share/nginx/html/* /mnt/data;
+          volumeMounts:
+            - name: swagger-ui-storage
+              mountPath: /mnt/data
+      containers:
+        - name: swagger-ui
+          image: swaggerapi/swagger-ui:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SWAGGER_JSON
+              value: "https://api.example.com/swagger.json"
+          volumeMounts:
+            - name: swagger-ui-storage
+              mountPath: /usr/share/nginx/html
+            - name: swagger-ui-config
+              mountPath: /usr/share/nginx/html/swagger-initializer.js
+              subPath: swagger-initializer.js
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
